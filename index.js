@@ -43,6 +43,48 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const { _id } = req.params;
+  const { from, to, limit } = req.query;
+
+  try {
+    const user = await User.findById(_id).exec();
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Build the date filter
+    const dateFilter = {};
+    if (from) dateFilter.$gte = new Date(from);
+    if (to) dateFilter.$lte = new Date(to);
+
+    // Build the exercise query
+    const filter = { userId: _id };
+    if (from || to) {
+      filter.date = dateFilter;
+    }
+
+    const exercises = await Exercise.find(filter)
+      .limit(parseInt(limit) || 0)
+      .select('description duration date -_id')
+      .exec();
+
+    // Format dates
+    const log = exercises.map(ex => ({
+      description: ex.description,
+      duration: ex.duration,
+      date: ex.date.toDateString(),
+    }));
+
+    res.json({
+      _id: user._id,
+      username: user.username,
+      count: log.length,
+      log,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
 app.post('/api/users', async (req, res) => {
   const username = req.body.username;
   if (!username) {
@@ -52,7 +94,7 @@ app.post('/api/users', async (req, res) => {
   // Simulate saving the user to a database
   const newUser = new User({ username });
   await newUser.save();
-  
+
   res.status(201).json(newUser);
 });
 

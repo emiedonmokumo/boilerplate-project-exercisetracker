@@ -110,7 +110,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   }
 
   // Find the user to get the username
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).lean();
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }

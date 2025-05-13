@@ -127,8 +127,8 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
 
 
   res.status(201).json({
+    ...user,
     _id: newExercise._id,
-    username: user.username,
     description,
     duration: Number(duration),
     date: newExercise.date.toDateString()

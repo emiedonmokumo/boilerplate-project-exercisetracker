@@ -28,6 +28,7 @@ const Exercise = mongoose.model('Exercise', exerciseSchema);
 
 app.use(cors())
 app.use(express.static('public'))
+app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
@@ -56,7 +57,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 
-app.post('/api/users/:_id/exercises', (req, res) => {
+app.post('/api/users/:_id/exercises', async (req, res) => {
   const userId = req.params._id;
   const { description, duration, date } = req.body;
 
@@ -65,13 +66,21 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   }
 
   // Simulate saving the exercise to a database
-  const newExercise = {
+  const newExercise = new Exercise({
     userId,
     description,
-    duration,
-    date: date ? new Date(date).toDateString() : new Date().toDateString()
-  };
-  res.status(201).json(newExercise);
+    duration: Number(duration),
+    date: date ? new Date(date) : new Date()
+  });
+  await newExercise.save();
+
+  res.status(201).json({
+    _id: newExercise._id,
+    username: (await User.findById(userId)).username,
+    description,
+    duration: Number(duration),
+    date: newExercise.date.toDateString()
+  });
 });
 
 

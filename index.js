@@ -74,14 +74,17 @@ app.get('/api/users/:_id/logs', async (req, res) => {
       date: ex.date.toDateString(),
     }));
 
-    res.json({
+    const response = {
       _id: user._id,
       username: user.username,
-      from: new Date(from).toDateString(),
-      to: new Date(to).toDateString(),
       count: log.length,
       log,
-    });
+    }
+    
+    if (from) response.from = new Date(from).toDateString();
+    if (to) response.to = new Date(to).toDateString();
+
+    res.json(response);
   } catch (err) {
     res.status(500).json({ error: 'Server error', details: err.message });
   }

@@ -109,31 +109,29 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     return res.status(400).json({ error: 'Description and duration are required' });
   }
 
-  // Find the user to get the username
-  const user = await User.findById(userId).lean();
+  const user = await User.findById(userId);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
-  console.log(user)
 
-  // Simulate saving the exercise to a database
-  const newExercise = new Exercise({
-    userId,
+  const exercise = new Exercise({
+    userId: user._id,
     description,
     duration: Number(duration),
     date: date ? new Date(date) : new Date()
   });
-  await newExercise.save();
 
+  await exercise.save();
 
   res.status(201).json({
-    ...user,
-    _id: newExercise._id,
-    description,
-    duration: Number(duration),
-    date: newExercise.date.toDateString()
+    _id: user._id,
+    username: user.username,
+    description: exercise.description,
+    duration: exercise.duration,
+    date: exercise.date.toDateString()
   });
 });
+
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
